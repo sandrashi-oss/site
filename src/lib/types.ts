@@ -221,3 +221,86 @@ export type Form = {
   page: Record<`title` | `note`, string>
   header: Record<`title` | `note`, string>
 } & FormMessages
+
+// Microcopy type for internationalization/localization content
+export type Microcopy = {
+  locale?: string
+  country?: string
+  meta?: {
+    name?: string
+    description?: string
+    url?: string
+  }
+  location?: {
+    register?: string
+    joinStudent?: string
+    registerStudent?: string
+    linkStudentInfo?: string
+    infoStudentButton?: string
+    joinPupil?: string
+    registerPupil?: string
+    linkPupilInfo?: string
+    infoPupilButton?: string
+    locationManagement?: string
+    mailTo?: string
+    writeMailButton?: string
+    linkLeadingInfo?: string
+    infoLeadingButton?: string
+    contact?: string
+    questions?: string
+    student?: string
+    pupil?: string
+    info?: string
+    url?: string
+    forStudents?: string
+    forPartner?: string
+    generalRequests?: string
+  }
+  chapterList?: {
+    locations?: string
+    inSetup?: string
+    partner?: string
+  }
+  map?: {
+    location?: {
+      lng?: number
+      lat?: number
+      zoom?: number
+      minZoom?: number
+      maxZoom?: number
+    }
+    text?: {
+      active?: string
+      inSetup?: string
+      partner?: string
+    }
+  }
+  indexPage?: {
+    title?: string
+    theme?: string
+    chooseLocation?: string
+    register?: string
+    boxes?: {
+      locationsNumber?: number
+      locationsName?: string
+      studentsNumber?: number
+      studentsName?: string
+      pupilsNumber?: number
+      pupilsName?: string
+      scholarshipNumber?: number
+      scholarshipName?: string
+      organizationMemberNumber?: number
+      organizationMemberName?: string
+    }
+  }
+  basepage?: {
+    lastUpdated?: string
+    email?: string
+    feedback?: string
+  }
+  footer?: {
+    name?: string
+    site?: string
+    uses?: string
+  }
+}

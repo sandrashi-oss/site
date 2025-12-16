@@ -1,21 +1,37 @@
 <script lang="ts">
   import { beforeNavigate } from '$app/navigation'
   import { page } from '$app/stores'
-  import Icon from '@iconify/svelte'
   import { slide } from 'svelte/transition'
   import type { NavLink } from './types'
 
-  let { nav, mobile } = $props<{ nav: NavLink[]; mobile: boolean }>()
+  // Icon imports (bundled)
+  import IconChevronExpand from '~icons/bi/chevron-expand'
+  import IconRssSquare from '~icons/fa-solid/rss-square'
+  import IconMenu from '~icons/heroicons-solid/menu'
+  import IconPlace from '~icons/ic/place'
+  import IconAlternateEmail from '~icons/ic/round-alternate-email'
+  import IconAssignmentInd from '~icons/ic/round-assignment-ind'
+  import IconPeopleCircle from '~icons/ion/people-circle'
+  import IconPlantFill from '~icons/ri/plant-fill'
+  import IconHandsHelping from '~icons/fa-solid/hands-helping'
 
-  const icon_map: Record<string, string> = {
-    'Über Uns': `ri:plant-fill`,
-    Standorte: `ic:place`,
-    Mitmachen: `ion:people-circle`,
-    Blog: `fa-solid:rss-square`,
-    Kontakt: `ic:round-alternate-email`,
-    Internes: `fa-solid:hands-helping`,
-    Anmeldung: `ic:round-assignment-ind`,
+  interface Props {
+    nav: NavLink[]
+    mobile: boolean
   }
+
+  let { nav, mobile }: Props = $props()
+
+  // Map titles to components
+   const icon_map: Record<string, typeof IconPlantFill> = {
+     'Über Uns': IconPlantFill,
+     Standorte: IconPlace,
+     Mitmachen: IconPeopleCircle,
+     Blog: IconRssSquare,
+     Kontakt: IconAlternateEmail,
+     Internes: IconHandsHelping,
+     Anmeldung: IconAssignmentInd,
+   }
 
   let isOpen = $state(false)
   let activeSubNav = $state(-1)
@@ -27,20 +43,16 @@
   }
 
   const setActiveSubNav = (idx: number) => () => {
-    // if activeSubNav already is idx, we want to close the subnav to get toggle behavior on mobile
     if (activeSubNav === idx) activeSubNav = -1
     else activeSubNav = idx
   }
 
   const toggleSubNav = (idx: number) => () => {
-    // if activeSubNav already is idx, we want to close the subnav to get toggle behavior on mobile
     if (activeSubNav === idx) activeSubNav = -1
     else activeSubNav = idx
   }
 
-  // isCurrent needs to be reactive to respond to changes in $page.url.pathname
   const isCurrent = $derived((url: string) => {
-    // Only access page store on the client to avoid SSR issues
     if (typeof window === `undefined`) return undefined
     if (url === $page.url.pathname) return `page`
     if (url !== `/` && $page.url.pathname.includes(url)) return `page`
@@ -48,12 +60,12 @@
   })
   beforeNavigate(close)
 
-  const crawl_links = nav.flatMap((itm) => itm?.subNav ?? [])
+  const crawl_links = $derived(nav.flatMap((itm) => itm?.subNav ?? []))
 </script>
 
 <svelte:window
-  on:click={(event) => {
-    if (!node.contains(event.target)) close()
+  onclick={(event) => {
+    if (node && !node.contains(event.target as globalThis.Node)) close()
   }}
 />
 
@@ -66,48 +78,52 @@
   >
 {/each}
 
-{#if mobile}
-  <button
-    on:click|preventDefault|stopPropagation={() => (isOpen = true)}
-    aria-label="Navigationsmenü öffnen"
-    style="grid-area: nav;"
-  >
-    <Icon icon="heroicons-solid:menu" />
-  </button>
-{/if}
+<button
+  class="mobile-menu-btn"
+  onclick={(e) => { e.preventDefault(); e.stopPropagation(); isOpen = true }}
+  aria-label="Navigationsmenü öffnen"
+  style="grid-area: nav;"
+>
+  <IconMenu />
+</button>
 
-<a on:click={close} class="logo" href="/" aria-current={isCurrent(`/`)}>
+<a onclick={close} class="logo" href="/" aria-current={isCurrent(`/`)}>
   <img src="/favicon.svg" alt="ST Logo" height="50" width="50" />
 </a>
 
-<nav class:isOpen class={mobile ? `mobile` : `desktop`} bind:this={node}>
+<nav class:isOpen bind:this={node}>
   <ul>
     {#each nav as { title, url, subNav }, idx}
       <li
-        on:mouseenter={mobile ? null : setActiveSubNav(idx)}
-        on:mouseleave={mobile ? null : setActiveSubNav(-1)}
+        onmouseenter={mobile ? undefined : setActiveSubNav(idx)}
+        onmouseleave={mobile ? undefined : setActiveSubNav(-1)}
       >
         <span>
           <a
-            on:click={close}
+            onclick={close}
             aria-current={isCurrent(url)}
             href={url}
             style="display: flex; align-items: center;"
           >
-            <Icon icon={icon_map[title]} style="margin: 0 5pt 0 0;" />
+            <!-- Using component from map -->
+            {#if icon_map[title]}
+               {@const Icon = icon_map[title]}
+               <span style="display: inline-flex; margin: 0 5pt 0 0;">
+                 <Icon />
+               </span>
+            {/if}
             {title}
           </a>
           {#if subNav}
             <button
-              on:click={toggleSubNav(idx)}
+              onclick={toggleSubNav(idx)}
               aria-label="Untermenü {title} öffnen"
             >
-              <Icon icon="bi:chevron-expand" />
+              <IconChevronExpand />
             </button>
           {/if}
         </span>
         {#if subNav && activeSubNav === idx}
-          <!-- TODO: use media query to check if user prefers reduced motion and toggle (not slide) if so -->
           <ul
             transition:slide
             style="grid-template-columns: repeat({Math.min(
@@ -115,10 +131,10 @@
               4
             )}, 1fr);"
           >
-            {#each subNav as { title, url, spanCols, lightFont }}
+            {#each subNav as { title: subTitle, url: subUrl, spanCols, lightFont }}
               <li class:spanCols class:lightFont>
-                <a on:click={close} aria-current={isCurrent(url)} href={url}>
-                  {title}
+                <a onclick={close} aria-current={isCurrent(subUrl)} href={subUrl}>
+                  {subTitle}
                 </a>
               </li>
             {/each}
@@ -131,6 +147,9 @@
 
 <style>
   button {
+    display: flex;
+  }
+  button.mobile-menu-btn {
     display: flex;
   }
   a,
@@ -179,43 +198,17 @@
     font-weight: lighter;
     opacity: 0.6;
   }
-  /* mobile styles */
-  nav.mobile {
-    position: fixed;
-    top: 1em;
-    left: 1em;
-    padding: 1em;
-    transition: 0.4s;
-    max-height: calc(100vh - 2em);
-    background: var(--header-bg);
-    transform: translate(-120%);
-    box-sizing: border-box;
-    overscroll-behavior: none;
+  button.mobile-menu-btn {
+    display: none;
   }
-  nav.mobile.isOpen {
-    box-shadow: 0 0 1em black;
-    transform: translate(0);
-  }
-  nav.mobile > ul {
-    display: grid;
-    grid-gap: 1em;
-    padding: 0;
-    margin: 0;
-  }
-  nav.mobile > ul > li > ul {
-    margin-top: 1ex;
-    list-style: disc;
-    padding-left: 2ex;
-  }
-  /* desktop styles */
-  nav.desktop,
-  nav.desktop > ul {
+  nav,
+  nav > ul {
     display: contents;
   }
-  nav.desktop > ul > li {
+  nav > ul > li {
     position: relative;
   }
-  nav.desktop > ul > li > ul {
+  nav > ul > li > ul {
     position: absolute;
     background: var(--header-bg);
     padding: 1ex 1em;
@@ -229,13 +222,47 @@
     overflow-y: auto;
     overscroll-behavior: none;
   }
-  nav.desktop > ul > li > ul > li.spanCols {
+  nav > ul > li > ul > li.spanCols {
     grid-column: 1/-1;
     border-top: 1px solid var(--header-color);
     padding-top: 6pt;
     margin-top: 6pt;
   }
-  nav.desktop button:first-child {
-    display: none;
+  @media (max-width: 1100px) {
+    button.mobile-menu-btn {
+      display: flex;
+    }
+    nav {
+      display: block;
+      position: fixed;
+      top: 1em;
+      left: 1em;
+      padding: 1em;
+      transition: 0.4s;
+      max-height: calc(100vh - 2em);
+      background: var(--header-bg);
+      transform: translate(-120%);
+      box-sizing: border-box;
+      overscroll-behavior: none;
+    }
+    nav.isOpen {
+      box-shadow: 0 0 1em black;
+      transform: translate(0);
+    }
+    nav > ul {
+      display: grid;
+      grid-gap: 1em;
+      padding: 0;
+      margin: 0;
+    }
+    nav > ul > li > ul {
+      margin-top: 1ex;
+      list-style: disc;
+      padding-left: 2ex;
+      position: static;
+      box-shadow: none;
+      padding: 0;
+      border-radius: 0;
+    }
   }
 </style>

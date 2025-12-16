@@ -1,14 +1,33 @@
 <script lang="ts">
   import { Img, ToolTip } from '$lib'
-  import Icon from '@iconify/svelte'
   import { onMount } from 'svelte'
 
+  // Icon imports (bundled at build time)
+  import IconPerson from '~icons/bi/person-circle'
+  import IconHistoryEdu from '~icons/ic/round-history-edu'
+  import IconGraduation from '~icons/fa-solid/graduation-cap'
+  import IconCalendar from '~icons/octicon/calendar'
+  import IconEye from '~icons/ic/round-remove-red-eye'
+
   const { data } = $props()
-  let n_readers = 0
+  let n_readers = $state(0)
+
+  // Derived values from data.post
+  const post = $derived(data.post)
+  const title = $derived(post.title)
+  const body = $derived(post.body)
+  const cover = $derived(post.cover)
+  const date = $derived(post.date)
+  const author = $derived(post.author)
+  const bio = $derived(author.bio)
+  const fieldOfStudy = $derived(author.fieldOfStudy)
+  const name = $derived(author.name)
+  const photo = $derived(author.photo)
+  const style = `padding: 0 3pt;`
 
   onMount(async () => {
     const response = await fetch(
-      `https://plausible.io/api/v1/stats/aggregate?site_id=studytutors.de&period=6mo&filters=event:page==${data.post.slug}`,
+      `https://plausible.io/api/v1/stats/aggregate?site_id=studytutors.de&period=6mo&filters=event:page==${post.slug}`,
       {
         headers: {
           Authorization: `Bearer ${import.meta.env.VITE_PLAUSIBLE_API_KEY}`,
@@ -23,10 +42,6 @@
     const { results } = await response.json()
     n_readers = results.visitors.value
   })
-
-  const { title, body, cover, date } = data.post
-  const { bio, fieldOfStudy, name, photo } = data.post.author
-  const style = `padding: 0 3pt;`
 </script>
 
 <article>
@@ -43,30 +58,30 @@
       von
       {#if bio || fieldOfStudy}
         <ToolTip minWidth="18em">
-          <Icon inline icon="bi:person-circle" {style} />
+          <IconPerson {style} />
           <strong>{name}</strong>
           <span slot="tip">
-            <Icon inline icon="ic:round-history-edu" {style} />
+            <IconHistoryEdu {style} />
             Bio:
             {bio}
             {#if fieldOfStudy}
               <br />
-              <Icon inline icon="fa-solid:graduation-cap" {style} />
+              <IconGraduation {style} />
               Studiert:
               {fieldOfStudy}
             {/if}
           </span>
         </ToolTip>
       {:else}
-        <Icon inline icon="bi:person-circle" {style} />
+        <IconPerson {style} />
         <strong>{name}</strong>
       {/if}
       am
-      <Icon inline icon="octicon:calendar" {style} />
+      <IconCalendar {style} />
       <strong>{new Date(date).toLocaleDateString(`de`)}</strong>
     </span>
     <span>
-      <Icon icon="ic:round-remove-red-eye" />
+      <IconEye />
       {n_readers}
     </span>
   </section>

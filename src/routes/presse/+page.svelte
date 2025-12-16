@@ -1,56 +1,56 @@
 <script lang="ts">
   import { BasePage, Img } from '$lib'
-  import Icon from '@iconify/svelte'
+  import type { PressItem } from '$lib/types'
 
-  export let data
+  // Icon imports (bundled at build time)
+  import IconNewspaper from '~icons/ion/newspaper'
+  import IconCalendar from '~icons/octicon/calendar'
+  import IconPlace from '~icons/ic/place'
+
+  const { data } = $props()
+  const pressItems = $derived(data.pressItems as Record<string, PressItem[]>)
 
   const style = `margin: 0 5pt 0 0;`
 </script>
 
 {#if data.page}
 <BasePage page={data.page}>
-  <svelte:fragment slot="afterArticle">
-    {#each Object.entries(data.pressItems).reverse() as [year, pressArr] (year)}
+  {#snippet afterArticle()}
+    {#each Object.entries(pressItems).reverse() as [year, pressArr] (year)}
       <h2>{year}</h2>
       <ul class="items">
         {#each pressArr as { title, id, img, url, date, chapter, source } (id)}
-          {@const titleStr = title as string}
-          {@const imgStr = img as string}
-          {@const urlStr = url as string}
-          {@const dateObj = date as Date}
-          {@const chapterStr = chapter as string}
-          {@const sourceStr = source as string}
           <li>
-            <a href={urlStr}>
+            <a href={url}>
               <Img
-                src={imgStr}
-                alt={titleStr}
+                src={img}
+                alt={title}
                 sizes={[{ w: 175 }]}
                 img_style="width: 125px; float: left; margin: 2ex 3ex 1em 0; border-radius: 2pt;"
               />
             </a>
             <h3 {id}>
-              <a href={urlStr}>{titleStr}</a>
+              <a href={url}>{title}</a>
             </h3>
             <div>
               <span>
-                <Icon inline icon="ion:newspaper" {style} />
-                {sourceStr}
+                <IconNewspaper {style} />
+                {source}
               </span>
               <span>
-                <Icon inline icon="octicon:calendar" {style} />
-                {dateObj.toLocaleDateString(`de`)}
+                <IconCalendar {style} />
+                {date.toLocaleDateString(`de`)}
               </span>
               <span>
-                <Icon inline icon="ic:place" {style} />
-                Standort {chapterStr}
+                <IconPlace {style} />
+                Standort {chapter}
               </span>
             </div>
           </li>
         {/each}
       </ul>
     {/each}
-  </svelte:fragment>
+  {/snippet}
 </BasePage>
 {/if}
 

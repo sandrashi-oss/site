@@ -1,5 +1,6 @@
 <script lang="ts">
   import mapboxgl from 'mapbox-gl'
+  import type { Map as MapboxMap } from 'mapbox-gl'
   import 'mapbox-gl/dist/mapbox-gl.css'
   import { onMount } from 'svelte'
   import { microcopy } from './stores'
@@ -14,19 +15,41 @@
 
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_PUBLIC_KEY
 
+  interface Props {
+    map?: MapboxMap | null
+    markers?: MapMarker[]
+    css?: string
+    lng?: number
+    lat?: number
+    zoom?: number
+    minZoom?: number
+    maxZoom?: number
+  }
+
   let {
     map = $bindable(null),
     markers = [],
     css = ``,
-  }: {
-    map?: mapboxgl.Map | null
-    markers?: MapMarker[]
-    css?: string
-  } = $props()
+    lng: propLng,
+    lat: propLat,
+    zoom: propZoom,
+    minZoom: propMinZoom,
+    maxZoom: propMaxZoom,
+  }: Props = $props()
 
-  const { lng, lat, zoom, minZoom, maxZoom } = $microcopy?.map?.location ?? [
-    10, 51.3, 5.05, 4, 10,
-  ]
+  // Use props if provided, otherwise fall back to store, then defaults
+  const getLocation = () => {
+    const storeLoc = $microcopy?.map?.location
+    return {
+      lng: propLng ?? storeLoc?.lng ?? 10,
+      lat: propLat ?? storeLoc?.lat ?? 51.3,
+      zoom: propZoom ?? storeLoc?.zoom ?? 5.05,
+      minZoom: propMinZoom ?? storeLoc?.minZoom ?? 4,
+      maxZoom: propMaxZoom ?? storeLoc?.maxZoom ?? 10,
+    }
+  }
+
+  const { lng, lat, zoom, minZoom, maxZoom } = getLocation()
 
   let map_div: HTMLDivElement
 
@@ -38,7 +61,9 @@
   })
 
   onMount(() => {
-    map = new mapboxgl.Map({
+    if (!map_div) return
+
+    const mapInstance = new mapboxgl.Map({
       cooperativeGestures: true,
       container: map_div,
       style: `mapbox://styles/mapbox/outdoors-v11?optimize=true`,
@@ -48,16 +73,25 @@
       maxZoom,
     })
 
-    map.on(`load`, map.resize) // ensure map takes up full available width
+    map = mapInstance
+
+    mapInstance.on(`load`, () => mapInstance.resize()) // ensure map takes up full available width
 
     for (const { lng, lat, title, url, classes } of markers) {
-      const node = document.createElement(url ? `a` : `span`)
-      node.innerHTML = title
-      if (url) node.href = url
-      if (classes?.length) node.classList.add(...classes)
-
-      const marker = new mapboxgl.Marker(node, { anchor: `bottom`, offset: [0, -11] })
-      marker.setLngLat([lng, lat]).addTo(map)
+      if (url) {
+        const node = document.createElement(`a`)
+        node.innerHTML = title
+        node.href = url
+        if (classes?.length) node.classList.add(...classes)
+        const marker = new mapboxgl.Marker(node, { anchor: `bottom`, offset: [0, -11] })
+        marker.setLngLat([lng, lat]).addTo(mapInstance)
+      } else {
+        const node = document.createElement(`span`)
+        node.innerHTML = title
+        if (classes?.length) node.classList.add(...classes)
+        const marker = new mapboxgl.Marker(node, { anchor: `bottom`, offset: [0, -11] })
+        marker.setLngLat([lng, lat]).addTo(mapInstance)
+      }
     }
   })
 </script>

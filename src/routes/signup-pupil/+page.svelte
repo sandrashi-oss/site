@@ -1,18 +1,16 @@
 <script lang="ts">
   import { CircleSpinner, FormField, Modal } from '$lib'
-  // to make the signup form truely adaptive to other countries, these 3 files need to be imported adaptively (same in the other form)
+  // to make the signup form truly adaptive to other countries, these 3 files need to be imported adaptively (same in the other form)
   import { signup_form_submit_handler } from '$lib/azure'
   import { signupStore } from '$lib/stores'
-  import _Icon from '@iconify/svelte'
+  import type { FormFieldProps } from '$lib/types'
 
   const { data } = $props()
-  const { chapters, form } = data
+  const chapters = $derived(data.chapters)
+  const form = $derived(data.form)
 
   // Add debugging and fallback
   $effect(() => {
-    console.debug(`Client-side data received:`, { data, form: !!form, chapters: !!chapters })
-    console.debug(`Form structure:`, { form })
-    console.debug(`Form header check:`, { hasForm: !!form, hasHeader: !!(form && form.header) })
     if (!form || !form.header) {
       console.error(`Form data is missing or incomplete:`, { data, form })
     }
@@ -23,7 +21,8 @@
   let isSubmitting = $state(false)
   const modalOpen = $derived(Boolean(error))
 
-  async function submit() {
+  async function submit(event: Event) {
+    event.preventDefault()
     isSubmitting = true
     try {
       $signupStore.type = { value: `pupil` }
@@ -35,7 +34,7 @@
         return
       }
 
-      const field_ids_to_validate = form.fields.map((field) => field.id) // list of form fields to validate
+      const field_ids_to_validate = form.fields.map((field: FormFieldProps) => field.id) // list of form fields to validate
 
       const response = await signup_form_submit_handler(
         field_ids_to_validate,
@@ -59,7 +58,7 @@
     <p>{@html form?.submitSuccess?.note || `Your registration was successful.`}</p>
   </section>
 {:else if form && form.header}
-  <form on:submit|preventDefault={submit}>
+  <form onsubmit={submit}>
     <!-- Prevent implicit submission of the form https://stackoverflow.com/a/51507806 -->
     <button type="submit" disabled style="display: none" aria-hidden="true"></button>
     <h1>
@@ -93,17 +92,10 @@
   </div>
 {/if}
 {#if modalOpen}
-  <Modal on:close={() => (error = undefined)} style="background: var(--body-bg);">
+  <Modal onclose={() => (error = undefined)} style="background: var(--body-bg);">
     <div>
       <span>{form?.submitError?.title || `Error`}</span>
       <p>{@html form?.submitError?.note || `An error occurred.`}</p>
-
-      <!-- <pre style="overflow-x: auto;"><code>
-        {JSON.stringify(error, null, 2)}
-      </code></pre>
-      <pre><code>
-        {JSON.stringify(error, Object.getOwnPropertyNames(error))}
-      </code></pre> -->
     </div>
   </Modal>
 {/if}

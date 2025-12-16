@@ -1,24 +1,7 @@
 <script lang="ts">
   type ImgSize = { w?: number; h?: number }
 
-  let {
-    src,
-    alt,
-    width = 100,
-    height = 100,
-    base64 = ``,
-    title = ``,
-    picture_style = ``,
-    img_style = ``,
-    loading = `lazy`,
-    sizes = [
-      { w: 1500 },
-      { w: 1200 },
-      { w: 900 },
-      { w: 600 },
-      { w: 400 },
-    ],
-  } = $props<{
+  interface Props {
     src: string
     alt: string
     width?: number
@@ -27,22 +10,42 @@
     title?: string
     picture_style?: string
     img_style?: string
-    loading?: string
+    loading?: `eager` | `lazy` | null | undefined
     sizes?: ImgSize[]
-  }>()
+  }
+
+  const defaultSizes: ImgSize[] = [
+    { w: 1500 },
+    { w: 1200 },
+    { w: 900 },
+    { w: 600 },
+    { w: 400 },
+  ]
+
+  let {
+    src,
+    alt,
+    width: propWidth = 100,
+    height: propHeight = 100,
+    base64 = ``,
+    title = ``,
+    picture_style = ``,
+    img_style = ``,
+    loading = `lazy`,
+    sizes: propSizes,
+  }: Props = $props()
+
+  const sizes = $derived(propSizes ?? defaultSizes)
 
   // heights are optional but widths are required for media=min-width below
-  if (!sizes.every((s) => s.w)) throw `Img with src="${src}" size missing width`
-
-  let [naturalWidth, naturalHeight] = [width, height] // copy user-provided width and height values
-
-  // grab the first width and height (if any) to compute natural height if custom height was
-  // not specified (used to prevent on-load layout shift by passing <img {width} {height} />)
+  const sizesValid = $derived(sizes.every((s) => s.w))
   $effect(() => {
-    if (sizes[0]?.w) width = sizes[0].w
-    if (sizes[0]?.h) height = sizes[0].h
-    if (!height) height = (width * naturalHeight) / naturalWidth
+    if (!sizesValid) throw `Img with src="${src}" size missing width`
   })
+
+  // Calculate dimensions based on sizes prop or defaults
+  const width = $derived(sizes[0]?.w ?? propWidth)
+  const height = $derived(sizes[0]?.h ?? (propWidth === propHeight ? propWidth : propHeight))
 
   const toQueryStr = (size: ImgSize) =>
     new URLSearchParams(size as Record<string, string>).toString()

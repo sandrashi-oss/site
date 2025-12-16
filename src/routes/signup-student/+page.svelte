@@ -2,10 +2,12 @@
   import { CircleSpinner, FormField, Modal } from '$lib'
   import { signup_form_submit_handler } from '$lib/azure'
   import { signupStore } from '$lib/stores'
-  import Icon from '@iconify/svelte'
+  import type { FormFieldProps } from '$lib/types'
+  import IconPlantFill from '~icons/ri/plant-fill'
 
   const { data } = $props()
-  const { chapters, form } = data
+  const chapters = $derived(data.chapters)
+  const form = $derived(data.form)
 
   // Add debugging and fallback
   $effect(() => {
@@ -19,7 +21,8 @@
   let isSubmitting = $state(false)
   const modalOpen = $derived(Boolean(error))
 
-  async function submit() {
+  async function submit(event: Event) {
+    event.preventDefault()
     isSubmitting = true
 
     try {
@@ -32,7 +35,7 @@
         return
       }
 
-      const field_ids_to_validate = form.fields.map((field) => field.id) // list of form fields to validate
+      const field_ids_to_validate = form.fields.map((field: FormFieldProps) => field.id) // list of form fields to validate
 
       const response = await signup_form_submit_handler(
         field_ids_to_validate,
@@ -56,15 +59,14 @@
     <p>{@html form?.submitSuccess?.note || `Your registration was successful.`}</p>
   </section>
 {:else if form && form.header}
-  <form on:submit|preventDefault={submit}>
+  <form onsubmit={submit}>
     <!-- Prevent implicit submission of the form https://stackoverflow.com/a/51507806 -->
     <button type="submit" disabled style="display: none" aria-hidden="true"></button>
     <h1>
-      <Icon icon="ri:plant-fill" inline />
+      <IconPlantFill style="display: inline-block; vertical-align: -0.125em;" />
       {@html form.header.title}
     </h1>
 
-    <!-- wrapping @html in <p> seems to help with https://github.com/sveltejs/svelte/issues/7698 (though not in minimal repro) -->
     <p>{@html form.header.note}</p>
 
     {#each form.fields || [] as props, idx (idx)}
@@ -91,17 +93,10 @@
   </div>
 {/if}
 {#if modalOpen}
-  <Modal on:close={() => (error = undefined)} style="background: var(--body-bg);">
+  <Modal onclose={() => (error = undefined)} style="background: var(--body-bg);">
     <div>
       <span>{form?.submitError?.title || `Error`}</span>
       <p>{@html form?.submitError?.note || `An error occurred.`}</p>
-
-      <!-- <pre style="overflow-x: auto;"><code>
-        {JSON.stringify(error, null, 2)}
-      </code></pre>
-      <pre><code>
-        {JSON.stringify(error, Object.getOwnPropertyNames(error))}
-      </code></pre> -->
     </div>
   </Modal>
 {/if}

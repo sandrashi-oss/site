@@ -1,39 +1,34 @@
 <script lang="ts">
-  import Icon from '@iconify/svelte'
+  // import Icon from '@iconify/svelte'
+  import IconDelete from '~icons/ic/delete'
   import type { Result } from '@mapbox/mapbox-gl-geocoder'
-  import type { Map as MapBox, Marker } from 'mapbox-gl'
+  import type { Map as MapBoxMap, Marker } from 'mapbox-gl'
   import mapbox from 'mapbox-gl'
-  import { Geocoder, Map } from '.'
+  import { Geocoder, Map as MapComponent } from '.'
   import type { Place } from './types'
+
+  interface Props {
+    value?: Place[]
+    placeholder?: string
+    div?: HTMLDivElement | null
+    id?: string | null
+  }
 
   let {
     value = $bindable([]),
     placeholder = ``,
     div = $bindable(null),
     id = null,
-  }: {
-    value?: Place[]
-    placeholder?: string
-    div?: HTMLDivElement | null
-    id?: string | null
-  } = $props()
+  }: Props = $props()
 
   let markers: Marker[] = $state([])
-  let map: MapBox | null = $state(null)
+  let map: MapBoxMap | null = $state(null)
 
   function selectHandler(place: Result) {
     if (!place.center) {
-      // User entered the name of a place that was not suggested and
-      // pressed the Enter key, or the place details request failed.
       window.alert(
         `Für '${place.text}' konnte keine Adresse gefunden werden! Bitte versuche einen anderen Ort anzugeben.`
       )
-      return
-    }
-
-    // Wait for map to be initialized
-    if (!map) {
-      console.warn(`Map not yet initialized, cannot add marker`)
       return
     }
 
@@ -41,27 +36,31 @@
 
     value = [...(value ?? []), { address: place.place_name, lng, lat }]
 
-    const marker = new mapbox.Marker()
-    marker.setLngLat([lng, lat]).addTo(map)
+    if (map) {
+      const marker = new mapbox.Marker()
+      marker.setLngLat([lng, lat]).addTo(map)
 
-    markers = [...markers, marker]
+      markers = [...markers, marker]
 
-    const bounds = new mapbox.LngLatBounds([lng, lat], [lng, lat])
-    for (const marker of markers) {
-      bounds.extend(marker.getLngLat())
+      const bounds = new mapbox.LngLatBounds([lng, lat], [lng, lat])
+      for (const marker of markers) {
+        bounds.extend(marker.getLngLat())
+      }
+
+      map.fitBounds(bounds, { padding: 100, duration: 400 })
     }
-
-    map.fitBounds(bounds, { padding: 100, duration: 400 })
   }
 
   const deletePlace = (idx: number) => () => {
+    if (!value) return
     // remove place from list
     value.splice(idx, 1)
-    value = [...value] // reassign to trigger rerender
+    value = [...value]
     // remove marker from map
-    markers[idx].remove()
-
-    markers.splice(idx, 1)
+    if (markers[idx]) {
+      markers[idx].remove()
+      markers.splice(idx, 1)
+    }
   }
 </script>
 
@@ -75,14 +74,14 @@
         value={place.address.split(`, `).slice(0, 2).join(`, `)}
         disabled
       />
-      <button on:click={deletePlace(idx)} type="button">
-        <Icon icon="ic:delete" style="width: 3ex;" inline />
+      <button onclick={deletePlace(idx)} type="button">
+        <IconDelete style="width: 3ex; display: inline-block; vertical-align: -0.125em;" />
       </button>
     </li>
   {/each}
 </ol>
 
-<Map bind:map css="height: 300px;" maxZoom={16} />
+<MapComponent bind:map css="height: 300px;" maxZoom={16} />
 
 <style>
   ol {

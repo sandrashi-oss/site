@@ -5,8 +5,9 @@
   import { scale } from 'svelte/transition'
 
   const { data } = $props()
+  const social = $derived(data.social as Record<string, string>)
 
-  let active_tag: BlogTag
+  let active_tag: BlogTag = $state(`Alle` as BlogTag)
 
   const filtered_posts = $derived(
     Array.isArray(data.posts)
@@ -15,7 +16,7 @@
   )
 </script>
 
-<Social social={data.social} fixed vertical />
+<Social {social} fixed vertical />
 
 <TagList posts={Array.isArray(data.posts) ? data.posts : []} bind:active_tag />
 
