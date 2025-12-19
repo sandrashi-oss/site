@@ -107,6 +107,16 @@ const renderer = {
   },
 }
 
-marked.use({ renderer })
+marked.use({
+  renderer,
+  hooks: {
+    preprocess(markdown: string) {
+      // CommonMark requires broken block-level HTML tags (like <div>) to be followed by
+      // a blank line to interpret nested content as Markdown.
+      // This regex inserts a blank line after opening div tags if one is missing.
+      return markdown.replace(/(<div[^>]*>)(\s*\n)(?!\s*\n)/gi, '$1\n\n')
+    },
+  },
+})
 
 export default marked

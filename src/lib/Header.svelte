@@ -1,7 +1,8 @@
 <script lang="ts">
   // import Search from 'svelte-algolia'
   import { browser } from '$app/environment'
-  import { Nav, ThemeSwitcher } from '.'
+  import Nav from './Nav.svelte'
+  import ThemeSwitcher from './ThemeSwitcher.svelte'
   // import { SearchHit } from '.'
   import type { NavLink } from './types'
 

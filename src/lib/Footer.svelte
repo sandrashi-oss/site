@@ -1,6 +1,6 @@
 <script lang="ts">
   import { repository } from '$root/package.json'
-  import { Social } from '.'
+  import Social from './Social.svelte'
   import { microcopy } from './stores'
   import type { Link } from './types'
 
