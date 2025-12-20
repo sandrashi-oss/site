@@ -54,6 +54,8 @@ body > div {
 main {
   hyphens: auto;
   width: 100%;
+  min-width: 0;
+  /* Allow shrinking below content width for responsive layouts */
 }
 
 main h1 {
