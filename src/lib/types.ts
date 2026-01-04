@@ -11,7 +11,12 @@ export type Chapter = {
 }
 
 // Unified status values combining chapter maturity and signup availability
-export type ChapterStatus = 'active' | 'acceptStudents' | 'acceptPupils' | 'starting' | 'partner'
+export type ChapterStatus =
+  | 'active'
+  | 'acceptStudents'
+  | 'acceptPupils'
+  | 'starting'
+  | 'partner'
 
 // Helper to derive signup eligibility from status
 export function canAcceptStudents(status: ChapterStatus): boolean {
@@ -99,12 +104,12 @@ export type Image = {
 
 export type Yaml = {
   [key: string]:
-  | string
-  | number
-  | Date
-  | boolean
-  | (string | number | Date | boolean)[]
-  | Yaml
+    | string
+    | number
+    | Date
+    | boolean
+    | (string | number | Date | boolean)[]
+    | Yaml
 }
 
 export type PressItem = {
@@ -270,8 +275,8 @@ export type Microcopy = {
     forStudents?: string
     forPartner?: string
     generalRequests?: string
-    pupilWaitlistFull?: string    // "Warteliste voll" - shown when pupil signups are closed
-    studentWaitlistFull?: string  // "Warteliste voll" - shown when student signups are closed
+    pupilWaitlistFull?: string // "Warteliste voll" - shown when pupil signups are closed
+    studentWaitlistFull?: string // "Warteliste voll" - shown when student signups are closed
   }
   chapterList?: {
     locations?: string

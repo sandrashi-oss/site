@@ -323,9 +323,9 @@ export function parse_form_data(obj: Form): Form {
     if (typeof itm === `string`) {
       // Process any string field that might contain markdown (title, note, etc.)
       const markdown = strip_indentation(itm as string)
-        ; (obj as Record<string, unknown>)[key] = strip_outer_par_tag(
-          markedInstance.parse(markdown) as string,
-        )
+      ;(obj as Record<string, unknown>)[key] = strip_outer_par_tag(
+        markedInstance.parse(markdown) as string,
+      )
     } else if (typeof itm === `object` && itm !== null && !Array.isArray(itm)) {
       // Recursively process nested objects (like header, submit, etc.)
       parse_form_data(itm as unknown as Form)
