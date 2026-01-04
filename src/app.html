@@ -10,8 +10,25 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
 
-    <!-- Static CSS imports to ensure theme is always available -->
+    <!-- All theme CSS files loaded statically - data-theme attribute controls which applies -->
+    <link rel="stylesheet" href="/light-theme.css" />
+    <link rel="stylesheet" href="/dark-theme.css" />
     <link rel="stylesheet" href="/system-theme.css" />
+
+    <!-- Blocking script to prevent theme flash - must run before page renders -->
+    <script>
+      ;(function () {
+        var theme = localStorage.getItem('color-mode') || 'system'
+        document.documentElement.setAttribute('data-theme', theme)
+        if (
+          theme === 'dark' ||
+          (theme === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
 
     <!-- required for triggering custom events in signup form -->
     <script>
