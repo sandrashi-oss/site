@@ -214,7 +214,11 @@ export async function signup_form_submit_handler(
   }
 
   try {
-    const response = await prepare_signup_data_for_airtable(signup_data, baseId, tableName)
+    const response = await prepare_signup_data_for_airtable(
+      signup_data,
+      baseId,
+      tableName,
+    )
 
     if (response.status < 200 || response.status >= 300) {
       // Include Airtable's error response for debugging

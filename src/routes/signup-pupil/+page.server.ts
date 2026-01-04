@@ -49,7 +49,10 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
       errMsg: { required: string }
     }
 
-    const optionsData = getLocaleModule(localeModules.options, locale) as Record<string, string[]>
+    const optionsData = getLocaleModule(
+      localeModules.options,
+      locale,
+    ) as Record<string, string[]>
 
     const rawFormData = getLocaleModule(localeModules.pupil, locale) as {
       airtableTable: string
