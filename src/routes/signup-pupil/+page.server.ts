@@ -43,39 +43,21 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     console.debug(`Loading pupil signup form for locale: ${locale}`)
 
     // Load locale-specific YAML data
-    const messagesData = getLocaleModule(localeModules.messages, locale) || {
-      submitSuccess: { title: `🎉 ⭐ 🎉`, note: `Success!` },
-      submitError: { title: `😢`, note: `Error occurred.` },
-      errMsg: { required: `This field is required` },
+    const messagesData = getLocaleModule(localeModules.messages, locale) as {
+      submitSuccess: { title: string; note: string }
+      submitError: { title: string; note: string }
+      errMsg: { required: string }
     }
 
-    const optionsData = (getLocaleModule(localeModules.options, locale) ||
-      {}) as Record<string, string[]>
+    const optionsData = getLocaleModule(localeModules.options, locale) as Record<string, string[]>
 
-    const rawFormData = (getLocaleModule(localeModules.pupil, locale) || {
-      airtableTable: 'Lernende',
-      header: {
-        title: `Anmeldung Schüler:innen`,
-        note: `Formular für Schüler:innen`,
-      },
-      fields: [
-        {
-          id: `chapter`,
-          title: `Standort`,
-          note: `Wähle einen unserer Nachhilfestandorte.`,
-          required: true,
-          type: `select`,
-          maxSelect: 1,
-        },
-      ],
-      submit: {
-        title: `Anmeldung abschicken`,
-        note: `Du bekommst innerhalb einer Minute eine Bestätigungs-Email von uns.`,
-      },
-    }) as { airtableTable?: string;[key: string]: unknown }
+    const rawFormData = getLocaleModule(localeModules.pupil, locale) as {
+      airtableTable: string
+      [key: string]: unknown
+    }
 
     // Extract airtableTable from form data (defined per form type per locale)
-    const airtableTable = rawFormData.airtableTable || 'Lernende'
+    const airtableTable = rawFormData.airtableTable
 
     console.debug(`YAML data loaded for locale ${locale}:`, {
       messages: !!messagesData,
@@ -96,7 +78,7 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     const form = parse_form_data({
       ...rawFormData,
       ...messagesData,
-    } as Parameters<typeof parse_form_data>[0])
+    } as unknown as Parameters<typeof parse_form_data>[0])
     console.debug(`form parsed:`, form)
 
     // In dev mode, add a test chapter at the beginning for testing purposes if defined
@@ -134,34 +116,6 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     }
   } catch (error) {
     console.error(`Error loading pupil signup form:`, error)
-    console.error(
-      `Error stack:`,
-      error instanceof Error ? error.stack : `Unknown error`,
-    )
-
-    // Return fallback form structure
-    const basicForm = {
-      header: { title: `Anmeldung Schüler:innen`, note: `Form loading...` },
-      fields: [
-        {
-          id: `chapter`,
-          title: `Standort`,
-          required: true,
-          type: `select`,
-          maxSelect: 1,
-        },
-      ],
-      submit: { title: `Anmeldung abschicken`, note: `` },
-      submitSuccess: { title: `Success`, note: `Success!` },
-      submitError: { title: `Error`, note: `Error occurred` },
-      errMsg: { required: `This field is required` },
-    }
-
-    console.debug(`Returning fallback form:`, basicForm)
-    return {
-      chapters: [],
-      form: JSON.parse(JSON.stringify(basicForm)),
-      airtableTable: 'Lernende',
-    }
+    throw error
   }
 }
