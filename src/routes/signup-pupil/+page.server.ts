@@ -51,7 +51,9 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
 
     const optionsData = (getLocaleModule(localeModules.options, locale) ||
       {}) as Record<string, string[]>
-    const rawFormData = getLocaleModule(localeModules.pupil, locale) || {
+
+    const rawFormData = (getLocaleModule(localeModules.pupil, locale) || {
+      airtableTable: 'Lernende',
       header: {
         title: `Anmeldung Schüler:innen`,
         note: `Formular für Schüler:innen`,
@@ -70,7 +72,10 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
         title: `Anmeldung abschicken`,
         note: `Du bekommst innerhalb einer Minute eine Bestätigungs-Email von uns.`,
       },
-    }
+    }) as { airtableTable?: string;[key: string]: unknown }
+
+    // Extract airtableTable from form data (defined per form type per locale)
+    const airtableTable = rawFormData.airtableTable || 'Lernende'
 
     console.debug(`YAML data loaded for locale ${locale}:`, {
       messages: !!messagesData,
@@ -111,8 +116,9 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     }
 
     for (const field of form.fields || []) {
-      if (field.id in optionsData) {
-        field.options = optionsData[field.id]
+      const optionValue = optionsData[field.id]
+      if (field.id in optionsData && Array.isArray(optionValue)) {
+        field.options = optionValue
       } else if (field.id === `chapter`) {
         field.options = chapters.map((chap) => chap.title)
       }
@@ -124,6 +130,7 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     return {
       chapters: JSON.parse(JSON.stringify(chapters)),
       form: JSON.parse(JSON.stringify(form)),
+      airtableTable,
     }
   } catch (error) {
     console.error(`Error loading pupil signup form:`, error)
@@ -154,6 +161,7 @@ export const load = async ({ fetch: customFetch }: { fetch: typeof fetch }) => {
     return {
       chapters: [],
       form: JSON.parse(JSON.stringify(basicForm)),
+      airtableTable: 'Lernende',
     }
   }
 }
